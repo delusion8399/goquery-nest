@@ -236,28 +236,31 @@ Most relevant table/collection name:`;
   }
 
   private buildMongoDBPrompt(schemaDesc: string, naturalQuery: string): string {
-    return `You are a MongoDB query generator for NestJS applications. Generate a MongoDB query based on the following schema and natural language query.
+    return `You are a MongoDB query generator for NestJS applications. Generate a MongoDB query based on the provided schema and natural language query.
 
 Schema:
 ${schemaDesc}
 
-For MongoDB queries, follow these rules:
-1. Return ONLY a valid JSON array containing the MongoDB pipeline stages that can be directly passed to .aggregate() or a JSON object for .find()
-2. First line should be a comment specifying the collection name: // Collection: collection_name
-3. Second line should be a comment specifying the operation type: // Operation: find or // Operation: aggregate
-4. For find operations, return a single JSON object representing the filter
-5. For aggregate operations, return a JSON array of pipeline stages
-6. Use proper MongoDB operators like $match, $group, $project, $sort, etc.
-7. For numeric operations, ensure values are properly parsed to numbers (use $toInt, $toDouble as needed)
-8. When using $subtract, always provide exactly 2 arguments
-9. When performing calculations, first use $project to convert string fields to numbers if needed
-10. Do not include any explanations, only the JSON pipeline/filter
-11. Ensure the output is valid JSON that can be parsed with JSON.parse()
-12. Limit results to 100 if not otherwise specified
-13. IMPORTANT: Output the JSON as a single line without any line breaks, indentation, or extra spaces
-14. Do not use any markdown formatting
+Guidelines for MongoDB queries:
+1. Return ONLY a valid JSON array for .aggregate() or JSON object for .find(), parseable by JSON.parse()
+2. First line: Comment with collection name: // Collection: collection_name
+3. Second line: Comment with operation type: // Operation: find or // Operation: aggregate
+4. For .find(): Return a single JSON object with filter conditions
+5. For .aggregate(): Return a JSON array of pipeline stages
+6. Use MongoDB operators ($match, $group, $project, $sort, etc.) correctly
+7. Convert string numbers to proper numeric types using $toInt or $toDouble in $project before calculations
+8. Ensure $subtract operations have exactly two arguments
+9. Perform type conversions in $project before calculations or comparisons
+10. Output JSON in a single line without breaks, indentation, or extra spaces
+11. Exclude explanations, markdown, or any non-JSON content
+12. Apply $limit: 100 if no limit specified
+13. Validate schema field references to match provided schema
+14. Handle date operations with $dateFromString or $dateToString when needed
+15. Use $exists for null/undefined checks
+16. For text searches, use $text with $search when appropriate
 
-Natural Language Query: ${naturalQuery}
+Natural Language Query:
+${naturalQuery}
 
 MongoDB Query:`;
   }
