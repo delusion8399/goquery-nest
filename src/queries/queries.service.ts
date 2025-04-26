@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { MongoClient } from "mongodb";
+import { Client } from "pg";
 import { AiService } from "src/ai/ai.service";
 import { DatabaseService } from "src/database/database.service";
 import { QueryStatus } from "src/database/models/query.entity";
@@ -422,9 +423,56 @@ export class QueriesService {
   }
 
   private async executePostgresQuery(
-    _database: any,
-    _query: string
+    database: any,
+    query: string
   ): Promise<any[]> {
-    return [{ id: 1, name: "Sample Data" }];
+    try {
+      const { host, port, username, password, databaseName, ssl } = database;
+
+      // Clean up the query - remove markdown SQL tags if present
+      let cleanedQuery = query;
+      if (query.startsWith("```sql") || query.startsWith("```")) {
+        cleanedQuery = query
+          .replace(/^```sql\n/, "") // Remove opening ```sql tag
+          .replace(/^```\n/, "") // Remove opening ``` tag
+          .replace(/\n```$/, "") // Remove closing ``` tag
+          .trim();
+      }
+
+      // Create PostgreSQL client
+      const client = new Client({
+        host,
+        port: parseInt(port),
+        user: username,
+        password,
+        database: databaseName,
+        ssl: ssl ? { rejectUnauthorized: false } : false,
+      });
+
+      // Connect to the database
+      this.logger.log(`Connecting to PostgreSQL database: ${databaseName}`);
+      await client.connect();
+
+      // Execute the query
+      this.logger.debug(`Executing PostgreSQL query: ${cleanedQuery}`);
+      const startTime = Date.now();
+      const result = await client.query(cleanedQuery);
+      const queryTime = Date.now() - startTime;
+      this.logger.debug(`Query executed in ${queryTime}ms`);
+
+      // Close the connection
+      await client.end();
+
+      // Return the rows from the result
+      return result.rows || [];
+    } catch (error: any) {
+      this.logger.error(
+        `Error executing PostgreSQL query: ${error.message}`,
+        error.stack
+      );
+      throw new BadRequestException(
+        `Failed to execute PostgreSQL query: ${error.message}`
+      );
+    }
   }
 }

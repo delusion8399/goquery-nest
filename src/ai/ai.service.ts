@@ -212,7 +212,7 @@ Most relevant table/collection name:`;
 
   async generateQueryTitle(naturalQuery: string): Promise<string> {
     const prompt = `Generate a concise, descriptive title (maximum 50 characters) for the following database query:\n\n${naturalQuery}\n\nTitle:
-    
+
     Guidelines:
     Only return the title, nothing else.`;
 
@@ -285,6 +285,8 @@ For PostgreSQL queries, follow these rules:
 5. Limit results to a reasonable number (e.g., LIMIT 100) if not specified
 6. Use proper SQL functions for calculations
 7. Do not include any comments or explanations in the output
+8. Do not include markdown formatting (no \`\`\`sql tags)
+9. Return only the raw SQL query text
 
 Natural Language Query: ${naturalQuery}
 

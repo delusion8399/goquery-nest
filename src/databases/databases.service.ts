@@ -165,10 +165,8 @@ export class DatabasesService {
 
   async testConnection(testConnectionDto: TestConnectionDto) {
     try {
-      // Create a copy of the DTO to avoid modifying the original
       const connectionData = { ...testConnectionDto };
 
-      // If it's a MongoDB connection with a connection URI, extract the database name
       if (connectionData.type === "mongodb" && connectionData.connectionURI) {
         try {
           // Extract database name from the connection URI
