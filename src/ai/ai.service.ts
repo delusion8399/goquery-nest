@@ -211,7 +211,10 @@ Most relevant table/collection name:`;
   }
 
   async generateQueryTitle(naturalQuery: string): Promise<string> {
-    const prompt = `Generate a concise, descriptive title (maximum 50 characters) for the following database query:\n\n${naturalQuery}\n\nTitle:`;
+    const prompt = `Generate a concise, descriptive title (maximum 50 characters) for the following database query:\n\n${naturalQuery}\n\nTitle:
+    
+    Guidelines:
+    Only return the title, nothing else.`;
 
     return this.callOpenRouter(prompt);
   }

@@ -1,5 +1,11 @@
-import { IsArray, IsMongoId, IsNotEmpty, IsObject, ValidateNested } from 'class-validator';
-import { Type } from 'class-transformer';
+import {
+  IsArray,
+  IsMongoId,
+  IsNotEmpty,
+  IsObject,
+  ValidateNested,
+} from "class-validator";
+import { Type } from "class-transformer";
 
 class CardPositionDto {
   @IsNotEmpty()
@@ -18,7 +24,7 @@ class CardPositionDto {
 class CardPositionUpdateDto {
   @IsMongoId()
   @IsNotEmpty()
-  id: string;
+  _id: string;
 
   @IsObject()
   @ValidateNested()

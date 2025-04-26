@@ -46,8 +46,8 @@ export class DatabasesController {
     const transformedDatabases = databases.map((db) => {
       const dbObj = db.toObject ? db.toObject() : db;
       // Add id property if it doesn't exist
-      if (dbObj._id && !dbObj.id) {
-        dbObj.id = dbObj._id.toString();
+      if (dbObj._id && !dbObj._id) {
+        dbObj._id = dbObj._id.toString();
       }
       return dbObj;
     });
