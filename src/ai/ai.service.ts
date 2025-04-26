@@ -35,7 +35,9 @@ export class AiService {
     schema: any,
     naturalQuery: string
   ): Promise<string> {
-    this.logger.log(`Finding matching schema table for query: ${naturalQuery}`);
+    this.logger.debug(
+      `Finding matching schema table for query: ${naturalQuery}`
+    );
     const startTime = Date.now();
 
     if (!schema || !schema.tables || schema.tables.length === 0) {
@@ -65,7 +67,7 @@ Most relevant table/collection name:`;
     const matchingTable = await this.callOpenRouter(prompt);
 
     const endTime = Date.now();
-    this.logger.log(
+    this.logger.debug(
       `Schema matching completed in ${endTime - startTime}ms. Matched table: ${matchingTable}`
     );
 
@@ -83,7 +85,7 @@ Most relevant table/collection name:`;
     schema: any,
     naturalQuery: string
   ): Promise<{ query: string; prompt: string }> {
-    this.logger.log(`Generating ${databaseType} query for: ${naturalQuery}`);
+    this.logger.debug(`Generating ${databaseType} query for: ${naturalQuery}`);
     const startTime = Date.now();
 
     // Step 1: Find the matching table to optimize token usage
@@ -179,7 +181,7 @@ Most relevant table/collection name:`;
     }
 
     const endTime = Date.now();
-    this.logger.log(`Query generation completed in ${endTime - startTime}ms`);
+    this.logger.debug(`Query generation completed in ${endTime - startTime}ms`);
 
     // Return both the generated query and the prompt used
     return {
