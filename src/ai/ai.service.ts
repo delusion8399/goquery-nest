@@ -58,9 +58,7 @@ You must follow these strict guidelines:
 - Do not include any explanations, comments, or additional text
 - If no table seems relevant, return the most likely one based on context`;
 
-    const prompt = `Given a natural language query and a list of table/collection names,
-identify which table or collection is most likely being referenced in the query.
-Return ONLY the name of the table/collection, nothing else.
+    const prompt = `
 
 Available tables/collections:
 ${tableNames}
