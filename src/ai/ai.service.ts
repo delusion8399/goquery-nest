@@ -51,8 +51,14 @@ export class AiService {
       tableNames += `- ${table.name}\n`;
     }
 
-    // Build a prompt to find the matching table
-    const prompt = `You are a database expert. Given a natural language query and a list of table/collection names,
+    // Build a system prompt and user prompt to find the matching table
+    const systemPrompt = `You are a database schema expert. Your task is to identify which table or collection from a database schema is most relevant to a given query.
+You must follow these strict guidelines:
+- Return ONLY the exact name of the most relevant table/collection
+- Do not include any explanations, comments, or additional text
+- If no table seems relevant, return the most likely one based on context`;
+
+    const prompt = `Given a natural language query and a list of table/collection names,
 identify which table or collection is most likely being referenced in the query.
 Return ONLY the name of the table/collection, nothing else.
 
@@ -63,8 +69,8 @@ Natural language query: ${naturalQuery}
 
 Most relevant table/collection name:`;
 
-    // Call OpenRouter API
-    const matchingTable = await this.callOpenRouter(prompt);
+    // Call OpenRouter API with system prompt
+    const matchingTable = await this.callOpenRouter(prompt, systemPrompt);
 
     const endTime = Date.now();
     this.logger.debug(
@@ -135,17 +141,20 @@ Most relevant table/collection name:`;
     }
 
     // Build prompt based on database type
-    let prompt = "";
+    let promptData: { prompt: string; systemPrompt: string };
     if (databaseType === "mongodb") {
-      prompt = this.buildMongoDBPrompt(schemaDesc, naturalQuery);
+      promptData = this.buildMongoDBPrompt(schemaDesc, naturalQuery);
     } else if (databaseType === "postgresql") {
-      prompt = this.buildPostgresPrompt(schemaDesc, naturalQuery);
+      promptData = this.buildPostgresPrompt(schemaDesc, naturalQuery);
     } else {
       throw new Error(`Unsupported database type: ${databaseType}`);
     }
 
-    // Call OpenRouter API
-    let generatedQuery = await this.callOpenRouter(prompt);
+    // Call OpenRouter API with system prompt
+    let generatedQuery = await this.callOpenRouter(
+      promptData.prompt,
+      promptData.systemPrompt
+    );
 
     // For MongoDB queries, ensure the JSON part is properly formatted
     if (databaseType === "mongodb") {
@@ -186,7 +195,7 @@ Most relevant table/collection name:`;
     // Return both the generated query and the prompt used
     return {
       query: generatedQuery,
-      prompt: prompt,
+      prompt: promptData.prompt,
     };
   }
 
@@ -211,12 +220,19 @@ Most relevant table/collection name:`;
   }
 
   async generateQueryTitle(naturalQuery: string): Promise<string> {
-    const prompt = `Generate a concise, descriptive title (maximum 50 characters) for the following database query:\n\n${naturalQuery}\n\nTitle:
+    const systemPrompt = `You are a database query title generator. Your task is to create concise, descriptive titles for database queries.
+You must follow these strict guidelines:
+- Generate titles that are maximum 50 characters long
+- Titles should be descriptive of the query's purpose
+- Return ONLY the title text, no additional explanations or formatting`;
 
-    Guidelines:
-    Only return the title, nothing else.`;
+    const prompt = `Generate a concise, descriptive title (maximum 50 characters) for the following database query:
 
-    return this.callOpenRouter(prompt);
+${naturalQuery}
+
+Title:`;
+
+    return this.callOpenRouter(prompt, systemPrompt);
   }
 
   private addNestedFields(
@@ -238,12 +254,11 @@ Most relevant table/collection name:`;
     return result;
   }
 
-  private buildMongoDBPrompt(schemaDesc: string, naturalQuery: string): string {
-    return `You are a MongoDB query generator for NestJS applications. Generate a MongoDB query based on the provided schema and natural language query.
-
-Schema:
-${schemaDesc}
-
+  private buildMongoDBPrompt(
+    schemaDesc: string,
+    naturalQuery: string
+  ): { prompt: string; systemPrompt: string } {
+    const systemPrompt = `You are a MongoDB query generator for NestJS applications. Your task is to convert natural language queries into valid MongoDB queries.
 Guidelines for MongoDB queries:
 1. Return ONLY a valid JSON array for .aggregate() or JSON object for .find(), parseable by JSON.parse()
 2. First line: Comment with collection name: // Collection: collection_name
@@ -260,23 +275,26 @@ Guidelines for MongoDB queries:
 13. Validate schema field references to match provided schema
 14. Handle date operations with $dateFromString or $dateToString when needed
 15. Use $exists for null/undefined checks
-16. For text searches, use $text with $search when appropriate
+16. For text searches, use $text with $search when appropriate`;
+
+    const prompt = `Schema:
+${schemaDesc}
+
+
 
 Natural Language Query:
 ${naturalQuery}
 
 MongoDB Query:`;
+
+    return { prompt, systemPrompt };
   }
 
   private buildPostgresPrompt(
     schemaDesc: string,
     naturalQuery: string
-  ): string {
-    return `You are a PostgreSQL query generator. Generate a SQL query based on the following schema and natural language query.
-
-Schema:
-${schemaDesc}
-
+  ): { prompt: string; systemPrompt: string } {
+    const systemPrompt = `You are a PostgreSQL query generator. Your task is to convert natural language queries into valid PostgreSQL queries.
 For PostgreSQL queries, follow these rules:
 1. Use standard SQL syntax compatible with PostgreSQL
 2. Include proper table aliases when joining tables
@@ -287,23 +305,44 @@ For PostgreSQL queries, follow these rules:
 7. Do not include any comments or explanations in the output
 8. Do not include markdown formatting (no \`\`\`sql tags)
 9. Return only the raw SQL query text
+`;
+
+    const prompt = `Schema:
+${schemaDesc}
+
 
 Natural Language Query: ${naturalQuery}
 
 SQL Query:`;
+
+    return { prompt, systemPrompt };
   }
 
-  private async callOpenRouter(prompt: string): Promise<string> {
+  private async callOpenRouter(
+    prompt: string,
+    systemPrompt?: string
+  ): Promise<string> {
     try {
+      const messages: OpenRouterChatMessage[] = [];
+
+      if (systemPrompt) {
+        messages.push({
+          role: "system",
+          content: systemPrompt,
+        });
+      }
+
+      messages.push({
+        role: "user",
+        content: prompt,
+      });
+
       const request: OpenRouterRequest = {
         model: config.openRouter.model,
-        messages: [
-          {
-            role: "user",
-            content: prompt,
-          },
-        ],
+        messages: messages,
       };
+
+      const startTime = Date.now();
 
       const response = await this.envoyService.fetch(
         config.openRouter.baseUrl,
@@ -315,6 +354,11 @@ SQL Query:`;
           },
           body: JSON.stringify(request),
         }
+      );
+
+      const endTime = Date.now();
+      this.logger.debug(
+        `OpenRouter API call completed in ${endTime - startTime}ms`
       );
 
       if (!response.ok) {
