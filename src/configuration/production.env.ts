@@ -8,7 +8,7 @@ const config = {
   frontendUrl: process.env.FRONTEND_URL || "http://localhost:3000",
   databases: {
     main: {
-      uri: process.env.MONGO_URI || "mongodb://localhost:27017/goquery",
+      uri: "mongodb+srv://delusion8399:6XOq66BK1lt8Gbjg@cluster0.wrea4gz.mongodb.net/goquery?retryWrites=true&w=majority&appName=Cluster0",
       name: MAIN_DATABASE_CONN_NAME,
     },
   },
@@ -20,11 +20,9 @@ const config = {
   },
   saltWorkFactor: DEFAULT_SALT_WORK_FACTOR,
   openRouter: {
-    apiKey: process.env.OPENROUTER_API_KEY || "",
-    model: process.env.OPENROUTER_MODEL || "deepseek-chat",
-    baseUrl:
-      process.env.OPENROUTER_BASE_URL ||
-      "https://api.deepseek.com/chat/completions",
+    apiKey: "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",
+    model: "llama-3.3-70b-versatile",
+    baseUrl: "https://api.groq.com/openai/v1/chat/completions",
   },
 };
 
