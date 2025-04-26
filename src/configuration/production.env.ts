@@ -20,9 +20,9 @@ const config = {
   },
   saltWorkFactor: DEFAULT_SALT_WORK_FACTOR,
   openRouter: {
-    apiKey: "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",
-    model: "llama-3.3-70b-versatile",
-    baseUrl: "https://api.groq.com/openai/v1/chat/completions",
+    apiKey: "sk-27a181185efe4c64ba39ececde2168f8",
+    model: "deepseek-chat",
+    baseUrl: "https://api.deepseek.com/chat/completions",
   },
 };
 
