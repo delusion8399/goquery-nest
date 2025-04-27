@@ -342,18 +342,21 @@ export class QueriesService {
       await client.connect();
       const db = client.db(dbName);
 
-      // Parse the query to extract collection name, operation type, and query details
+      // Parse the query to extract collection name, operation type, method chaining, and query details
       const lines = query.split("\n");
       let collectionName = "";
       let operationType = "";
+      let methodChaining = "";
       let queryJson = "";
 
-      // Extract collection name and operation type from comments
+      // Extract collection name, operation type, and method chaining from comments
       for (const line of lines) {
         if (line.startsWith("// Collection:")) {
           collectionName = line.replace("// Collection:", "").trim();
         } else if (line.startsWith("// Operation:")) {
           operationType = line.replace("// Operation:", "").trim();
+        } else if (line.startsWith("// Methods:")) {
+          methodChaining = line.replace("// Methods:", "").trim();
         } else if (line.trim() && !line.startsWith("//")) {
           // Accumulate non-comment lines as the query JSON
           queryJson += line;
@@ -395,12 +398,48 @@ export class QueriesService {
 
       let results = [];
 
-      // Execute the query based on operation type
       if (operationType === "find") {
-        const cursor = db
-          .collection(collectionName)
-          .find(parsedQuery)
-          .limit(100);
+        let cursor = db.collection(collectionName).find(parsedQuery);
+
+        if (methodChaining) {
+          this.logger.debug(`Applying method chaining: ${methodChaining}`);
+
+          if (methodChaining.includes(".sort(")) {
+            const sortMatch = methodChaining.match(/\.sort\((\{.*?\})\)/);
+            if (sortMatch && sortMatch[1]) {
+              try {
+                const sortObj = JSON.parse(sortMatch[1]);
+                cursor = cursor.sort(sortObj);
+                this.logger.debug(`Applied sort: ${JSON.stringify(sortObj)}`);
+              } catch (error) {
+                this.logger.warn(
+                  `Failed to parse sort object: ${error.message}`
+                );
+              }
+            }
+          }
+
+          if (methodChaining.includes(".limit(")) {
+            const limitMatch = methodChaining.match(/\.limit\((\d+)\)/);
+            if (limitMatch && limitMatch[1]) {
+              const limitValue = parseInt(limitMatch[1]);
+              cursor = cursor.limit(limitValue);
+              this.logger.debug(`Applied limit: ${limitValue}`);
+            }
+          }
+
+          if (methodChaining.includes(".skip(")) {
+            const skipMatch = methodChaining.match(/\.skip\((\d+)\)/);
+            if (skipMatch && skipMatch[1]) {
+              const skipValue = parseInt(skipMatch[1]);
+              cursor = cursor.skip(skipValue);
+              this.logger.debug(`Applied skip: ${skipValue}`);
+            }
+          }
+        } else {
+          cursor = cursor.limit(100);
+        }
+
         results = await cursor.toArray();
       } else if (operationType === "aggregate") {
         const cursor = db.collection(collectionName).aggregate(parsedQuery);

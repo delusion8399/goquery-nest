@@ -261,7 +261,7 @@ Guidelines for MongoDB queries:
 1. Return ONLY a valid JSON array for .aggregate() or JSON object for .find(), parseable by JSON.parse()
 2. First line: Comment with collection name: // Collection: collection_name
 3. Second line: Comment with operation type: // Operation: find or // Operation: aggregate
-4. For .find(): Return a single JSON object with filter conditions
+4. For .find(): Return a single JSON object with filter conditions ONLY - do not include operators like $limit in the find query object
 5. For .aggregate(): Return a JSON array of pipeline stages
 6. Use MongoDB operators ($match, $group, $project, $sort, etc.) correctly
 7. Convert string numbers to proper numeric types using $toInt or $toDouble in $project before calculations
@@ -269,11 +269,14 @@ Guidelines for MongoDB queries:
 9. Perform type conversions in $project before calculations or comparisons
 10. Output JSON in a single line without breaks, indentation, or extra spaces
 11. Exclude explanations, markdown, or any non-JSON content
-12. Apply $limit: 100 if no limit specified
+12. For limiting results in aggregation, include {$limit: 100} as a separate stage in the pipeline
 13. Validate schema field references to match provided schema
 14. Handle date operations with $dateFromString or $dateToString when needed
 15. Use $exists for null/undefined checks
-16. For text searches, use $text with $search when appropriate`;
+16. For text searches, use $text with $search when appropriate
+17. IMPORTANT: Never include operators like $limit, $skip, $sort as top-level keys in a find query - these are method calls, not query operators
+18. If a field name starts with '$', use $getField or $setField to access or modify it
+19. For .find() queries, include a third comment line with any needed method chaining: // Methods: .limit(100).sort({"field": 1})`;
 
     const prompt = `Schema:
 ${schemaDesc}
