@@ -40,7 +40,7 @@ export class DashboardsService {
     const dashboards = await this.databaseService.dashboardModel.find({
       userId: this.databaseService.ObjectId(userId),
     });
-    return { dashboards };
+    return { results: dashboards };
   }
 
   async getDashboard(userId: string, dashboardId: string) {

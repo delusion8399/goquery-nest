@@ -42,17 +42,7 @@ export class DatabasesController {
   async getDatabases(@Req() req: AuthenticatedRequest) {
     const databases = await this.databasesService.getDatabases(req.user.userId);
 
-    // Transform the databases to include id property
-    const transformedDatabases = databases.map((db) => {
-      const dbObj = db.toObject ? db.toObject() : db;
-      // Add id property if it doesn't exist
-      if (dbObj._id && !dbObj._id) {
-        dbObj._id = dbObj._id.toString();
-      }
-      return dbObj;
-    });
-
-    return { databases: transformedDatabases };
+    return { results: databases };
   }
 
   @Get(":id")

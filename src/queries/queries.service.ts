@@ -123,7 +123,7 @@ export class QueriesService {
     ]);
 
     return {
-      queries: queries,
+      results: queries,
       pagination: {
         total,
         page,
