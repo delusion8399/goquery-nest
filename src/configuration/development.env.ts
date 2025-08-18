@@ -8,7 +8,7 @@ const config = {
   frontendUrl: "http://localhost:3000",
   databases: {
     main: {
-      uri: "mongodb+srv://delusion8399:6XOq66BK1lt8Gbjg@cluster0.wrea4gz.mongodb.net/goquery?retryWrites=true&w=majority&appName=Cluster0",
+      uri: "mongodb://tijarah:MA6Bnte9X93T34Gaw2dtB58sL9qguDYUvuWZ@152.67.160.174:27088/gq?authSource=admin",
       name: MAIN_DATABASE_CONN_NAME,
     },
   },
