@@ -20,9 +20,10 @@ const config = {
   },
   saltWorkFactor: DEFAULT_SALT_WORK_FACTOR,
   openRouter: {
-    apiKey: "sk-27a181185efe4c64ba39ececde2168f8",
-    model: "deepseek-chat",
-    baseUrl: "https://api.deepseek.com/chat/completions",
+    apiKey: "AIzaSyDVAiuLcqyT9oFFnLy6ix6fEc17mihqRg0",
+    model: "gemini-2.5-flash",
+    baseUrl:
+      "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
   },
 };
 
